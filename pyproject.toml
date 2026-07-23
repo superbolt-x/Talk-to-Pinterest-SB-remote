@@ -1,0 +1,30 @@
+[project]
+name = "pinloop"
+version = "0.1.0"
+description = "MCP server connecting Pinterest (organic + ads) to Claude — Superbolt remote deployment"
+readme = "README.md"
+authors = [
+    { name = "Superbolt", email = "hernan@superbolt.agency" }
+]
+requires-python = ">=3.11"
+license = { text = "MIT" }
+keywords = ["mcp", "pinterest", "pinterest-ads", "marketing"]
+dependencies = [
+    "mcp[cli]>=1.6.0",
+    "requests>=2.31.0",
+    "uvicorn>=0.29.0",
+    "starlette>=0.37.0",
+]
+
+[project.scripts]
+pinloop = "pinloop:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "responses>=0.25"]

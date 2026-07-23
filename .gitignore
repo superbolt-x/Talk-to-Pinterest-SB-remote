@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.python-version
+
+# Tests
+.pytest_cache/
+.coverage
+
+# Secrets — never commit tokens or env files
+.env
+*.env
+*.token
+pinterest_refresh_token.txt
+token_store/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
