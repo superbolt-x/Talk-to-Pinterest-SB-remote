@@ -51,6 +51,20 @@ static env var is enough and **no volume is required**.
 If your app has refresh-token rotation enabled, set `PINTEREST_TOKEN_PATH` to a
 file on a mounted Railway volume; the server persists each rotated token there.
 
+### Multiple Pinterest logins
+
+If your ad accounts are split across several Pinterest logins (e.g. your own plus
+a client's), set `PINTEREST_PROFILES='{"superbolt":"<refresh>","sgs":"<refresh>"}'`
+(same app id/secret). `list_ad_accounts` merges every login's accounts and tags each
+with its `profile`; any call under `/ad_accounts/{id}/...` (campaigns, analytics,
+conversion tags, writes) is routed to the login that owns that account, and a 403
+rebuilds the routing map once and retries. If two logins see the same account the
+first profile wins. Boards/pins and other non-account calls use the first profile.
+`health_check` and `get_user_account` report per profile.
+
+Mint one refresh token per login: run the script below once for each, signed in as
+that Pinterest user (use a private window), with the same scopes.
+
 ## One-time setup: mint the seed token
 
 You need your own Pinterest app (app id + secret) with a registered redirect URI.

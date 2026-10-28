@@ -12,7 +12,7 @@ TOKEN_URL = "https://api.pinterest.com/v5/oauth/token"
 
 @pytest.fixture(autouse=True)
 def _reset_cache(monkeypatch):
-    monkeypatch.setattr(auth, "_cached_token", None)
+    monkeypatch.setattr(auth, "_cached_tokens", {})
 
 
 def _cfg(**ads):
@@ -43,7 +43,7 @@ def test_no_rotation_reuses_seed_refresh_token():
     )
     cfg = _cfg()
     get_access_token(cfg)
-    assert auth._cached_token.refresh_token == "pinr.seed"
+    assert auth._cached_tokens["default"].refresh_token == "pinr.seed"
 
 
 @responses.activate
@@ -56,7 +56,7 @@ def test_rotation_persists_new_refresh_token(tmp_path):
     )
     cfg = _cfg(token_path=str(token_file))
     get_access_token(cfg)
-    assert auth._cached_token.refresh_token == "pinr.rotated"
+    assert auth._cached_tokens["default"].refresh_token == "pinr.rotated"
     assert token_file.read_text() == "pinr.rotated"
 
 
