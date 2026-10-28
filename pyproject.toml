@@ -10,7 +10,7 @@ requires-python = ">=3.11"
 license = { text = "MIT" }
 keywords = ["mcp", "pinterest", "pinterest-ads", "marketing"]
 dependencies = [
-    "mcp[cli]>=1.6.0",
+    "mcp[cli]>=1.6.0,<2",
     "requests>=2.31.0",
     "uvicorn>=0.29.0",
     "starlette>=0.37.0",
