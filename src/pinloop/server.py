@@ -171,7 +171,8 @@ def health_check() -> dict:
     Run this first if other tools are failing. Returns status for each layer and
     actionable guidance if something is broken.
     """
-    from pinloop.auth import PinterestAuthError, check_config, get_access_token
+    from pinloop.api.client import api_request
+    from pinloop.auth import PinterestAuthError, check_config, get_access_token, profile_names
 
     status: dict = {"config": "ok", "auth": "unknown", "api": "unknown"}
     try:
@@ -181,30 +182,36 @@ def health_check() -> dict:
         status["config_error"] = str(e)
         return status
 
-    try:
-        get_access_token(_config)
-        status["auth"] = "ok"
-    except PinterestAuthError as e:
-        status["auth"] = "error"
-        status["auth_error"] = str(e)
-        status["hint"] = "Re-run the OAuth consent flow and reset PINTEREST_REFRESH_TOKEN."
-        return status
-    except Exception as e:
-        status["auth"] = "error"
-        status["auth_error"] = str(e)
-        return status
+    # Check every profile (login) independently so one dead token is visible
+    # without hiding the healthy ones.
+    profiles: dict[str, dict] = {}
+    for name in profile_names(_config):
+        entry: dict = {"auth": "unknown", "api": "unknown"}
+        profiles[name] = entry
+        try:
+            get_access_token(_config, profile=name)
+            entry["auth"] = "ok"
+        except PinterestAuthError as e:
+            entry["auth"] = "error"
+            entry["auth_error"] = str(e)
+            entry["hint"] = f"Re-run the OAuth consent flow as '{name}' and reset its refresh token."
+            continue
+        except Exception as e:
+            entry["auth"] = "error"
+            entry["auth_error"] = str(e)
+            continue
+        try:
+            acct = api_request(_config, "GET", "/user_account", profile=name)
+            entry["api"] = "ok"
+            entry["username"] = acct.get("username")
+        except Exception as e:
+            entry["api"] = "error"
+            entry["api_error"] = str(e)
 
-    try:
-        from pinloop.api.accounts import get_user_account
-
-        acct = get_user_account(_config)
-        status["api"] = "ok"
-        status["username"] = acct.get("username")
-        status["default_ad_account_id"] = _config.ads.ad_account_id or "(unset)"
-    except Exception as e:
-        status["api"] = "error"
-        status["api_error"] = str(e)
-
+    status["profiles"] = profiles
+    status["auth"] = "ok" if all(p["auth"] == "ok" for p in profiles.values()) else "error"
+    status["api"] = "ok" if all(p["api"] == "ok" for p in profiles.values()) else "error"
+    status["default_ad_account_id"] = _config.ads.ad_account_id or "(unset)"
     return status
 
 
